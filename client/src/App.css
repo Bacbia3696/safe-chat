@@ -26,10 +26,6 @@
   font-size: 12px;
 }
 
-#content-table {
-  width: 500px;
-}
-
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

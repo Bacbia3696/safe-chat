@@ -1,6 +1,12 @@
 import React, { Component } from "react";
 import "./App.css";
-import { subscribeToChat, sendPackage, socket, verifyMessage } from "./api";
+import {
+  subscribeToChat,
+  sendPackage,
+  socket,
+  verifyMessage,
+  decrypt
+} from "./api";
 
 class App extends Component {
   constructor(props) {
@@ -18,9 +24,10 @@ class App extends Component {
     socket.on("connected", () => {
       console.log("connect sucessful");
     });
-    socket.on("package", d => {
-      console.log(d);
+    socket.on("package", async d => {
       d.verify = verifyMessage(d.encrypted, d.signature, d.publicKey);
+      d.decrypted = await decrypt(d.encrypted, d.receiver);
+      console.log("d is", d);
       const data = [...this.state.data];
       data.push(d);
       this.setState({ data });
@@ -38,6 +45,10 @@ class App extends Component {
   handleSubmit = event => {
     event.preventDefault();
     sendPackage(this.state.valueMessage, this.state.valueReceiver);
+    this.setState({
+      valueMessage: "",
+      valueReceiver: ""
+    });
   };
 
   render() {
@@ -63,8 +74,8 @@ class App extends Component {
           <p className={"small-text " + (d.verify ? "green" : "red") + "-text"}>
             Signature: {d.signature}
           </p>
-          <p className={(d.receiver === "" ? "indigo" : "red") + "-text"}>
-            Message: {d.encrypted}
+          <p className={(d.decrypted ? "green" : "red") + "-text"}>
+            Message: {d.decrypted || d.encrypted}
           </p>
         </div>
       ))
@@ -79,16 +90,18 @@ class App extends Component {
           <label>
             Message:
             <input
+              value={this.state.valueMessage}
               type="text"
-              name="message"
+              name={"message" + Math.random()}
               onChange={this.handleChangeMessage}
             />
           </label>
           <label>
             Receiver:
             <input
+              value={this.state.valueReceiver}
               type="text"
-              name="receiver"
+              name={"message" + Math.random()}
               onChange={this.handleChangeReceiver}
             />
           </label>

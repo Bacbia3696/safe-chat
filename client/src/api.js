@@ -76,3 +76,23 @@ export function verifyMessage(message, signature, publicKey) {
   verify.update(message);
   return verify.verify(publicKey, signature, "base64");
 }
+
+// decrypt message
+export async function decrypt(message, receiver) {
+  if (receiver === "") {
+    return message;
+  }
+  let response = await fetch(process.env.REACT_APP_PRIVATE_KEY_FILE);
+  let privateKey = await response.text();
+  response = await fetch(process.env.REACT_APP_PUBLIC_KEY_FILE);
+  let publicKey = await response.text();
+  if (publicKey !== receiver) {
+    return null;
+  }
+  console.log(privateKey);
+  console.log(Buffer.from(message, "hex"));
+  let val = await crypto
+    .privateDecrypt(privateKey, Buffer.from(message, "hex"))
+    .toString("utf8");
+  return val;
+}
